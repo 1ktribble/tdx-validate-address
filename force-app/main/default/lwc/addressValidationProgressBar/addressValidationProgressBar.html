@@ -1,3 +1,7 @@
 <template>
-    
+    <lightning-progress-indicator current-step={addressStatus} variant="base">
+            <lightning-progress-step label="Pending" value="Pending"></lightning-progress-step>
+            <lightning-progress-step label="Invalid" value="Invalid"></lightning-progress-step>
+            <lightning-progress-step label="Verified" value="Verified"></lightning-progress-step>
+        </lightning-progress-indicator>
 </template>
