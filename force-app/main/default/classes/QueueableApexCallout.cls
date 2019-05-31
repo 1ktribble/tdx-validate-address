@@ -25,18 +25,14 @@ public class QueueableApexCallout implements Queueable, Database.AllowsCallouts{
             req.setBody(JSON.serialize(jsonString));
             Http http = new Http();
             HTTPResponse res = http.send(req);
-                        
-            Address_Validation_Status__e evt = new Address_Validation_Status__e();
-            evt.Status__c='Pending';
-            Eventbus.publish(evt);
 
             if(res.getStatusCode()==200){
                 Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
-                
-                Address_Validation_Status__e evtEnd = new Address_Validation_Status__e();
-                evtEnd.Status__c = (String) responseMap.get('status');
-                Eventbus.publish(evtEnd);
+                acc.AddressStatus__c = (String) responseMap.get('status');
+                accsToUpdate.add(acc);
             }
         }
+
+        update accsToUpdate;
     }
 }
