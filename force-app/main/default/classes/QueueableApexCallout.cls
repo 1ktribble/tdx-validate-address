@@ -28,8 +28,12 @@ public class QueueableApexCallout implements Queueable, Database.AllowsCallouts{
 
             if(res.getStatusCode()==200){
                 Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
-                acc.AddressStatus__c = (String) responseMap.get('status');
-                accsToUpdate.add(acc);
+                accsToUpdate.add(
+                    new Account(
+                        id = acc.Id
+                        , AddressStatus__c = (String) responseMap.get('status')
+                    )
+                );
             }
         }
 
