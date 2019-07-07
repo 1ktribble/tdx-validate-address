@@ -9,8 +9,8 @@ public class QueueableApexCallout implements Queueable, Database.AllowsCallouts{
         List<Account> accsToUpdate = new List<Account>();
         for(Account acc : accList){
             HttpRequest req = new HttpRequest();
-            // Todo: Change to UPS Address Validator.
-            req.setEndpoint('callout:codeysCreds'+'/verify');
+            // Todo: Change to UPS Address Validator. Add the username and password to the request.
+
             req.setHeader('content-type', 'application/json');
             req.setMethod('POST');
             
