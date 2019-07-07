@@ -1,5 +1,7 @@
 <template>
-    <template if:true={account.data}>
+    <!-- Todo: Using the same structure, set the current step to the event result. 
+        Todo: Also set the template conditional to the event response. -->
+    <!-- <template if:true={account.data}>
         <lightning-progress-indicator name="addressIndicator" current-step={addressStatus} variant="base">
             <lightning-progress-step label="Pending" value="Pending"></lightning-progress-step>
             <lightning-progress-step label="Invalid" value="Invalid"></lightning-progress-step>
@@ -8,5 +10,7 @@
     </template>
     <template if:true={account.error}>
         Could not load account data
-    </template>
+    </template> -->
+    <!-- Required Text :: NOTICE: UPS assumes no liability for the information provided by the address validation functionality. The
+address validation functionality does not support the identification or verification of occupants at an address. -->
 </template>
