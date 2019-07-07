@@ -9,6 +9,7 @@ public class QueueableApexCallout implements Queueable, Database.AllowsCallouts{
         List<Account> accsToUpdate = new List<Account>();
         for(Account acc : accList){
             HttpRequest req = new HttpRequest();
+            // Todo: Change to UPS Address Validator.
             req.setEndpoint('callout:codeysCreds'+'/verify');
             req.setHeader('content-type', 'application/json');
             req.setMethod('POST');
@@ -27,16 +28,10 @@ public class QueueableApexCallout implements Queueable, Database.AllowsCallouts{
             HTTPResponse res = http.send(req);
 
             if(res.getStatusCode()==200){
-                Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
-                accsToUpdate.add(
-                    new Account(
-                        id = acc.Id
-                        , AddressStatus__c = (String) responseMap.get('status')
-                    )
-                );
+                Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody()); 
+
+                // TODO: Create an event with the response from the responseMap identifier.
             }
         }
-
-        update accsToUpdate;
     }
 }

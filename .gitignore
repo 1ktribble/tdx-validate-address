@@ -33,3 +33,6 @@ $RECYCLE.BIN/
 force-app/main/default/profiles/
 force-app/main/default/object/Account/fields/
 !force-app/main/default/object/Account/fields/AddressStatus__c
+
+# JS Config file
+force-app/main/default/lwc/jsconfig.json
