@@ -7,10 +7,12 @@ public class QueueableApexCallout implements Queueable, Database.AllowsCallouts{
     
     public void execute(QueueableContext qc){
         List<Account> accsToUpdate = new List<Account>();
+        String accessToken = [SELECT MasterLabel, Token__c FROM AccessToken__mdt WHERE MasterLabel = 'UPS' LIMIT 1].Token__c;
         for(Account acc : accList){
             HttpRequest req = new HttpRequest();
             // Todo: Change to UPS Address Validator. Add the username and password to the request.
-
+            req.setEndpoint('callout:UPS_Access');
+            req.setHeader('AccessLicenseNumber', accessToken);
             req.setHeader('content-type', 'application/json');
             req.setMethod('POST');
             

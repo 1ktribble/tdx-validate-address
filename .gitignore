@@ -38,3 +38,6 @@ force-app/main/default/object/Account/fields/
 force-app/main/default/lwc/jsconfig.json
 
 RestTest.txt
+
+# Access tokens
+force-app/main/default/customMetadata/AccessToken.UPS.md-meta.xml
