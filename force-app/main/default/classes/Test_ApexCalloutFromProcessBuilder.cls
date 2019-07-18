@@ -8,13 +8,14 @@ public class Test_ApexCalloutFromProcessBuilder {
             , BillingCity = 'Somewhereville'
             , BillingState = 'CA'
             , BillingPostalCode = '12345'
+            , BillingCountry = 'US'
         );
         
         List<Account> accList = new List<Account>();
         accList.add(a);
         
         Test.startTest();        
-        System.enqueueJob(new QueueableApexCallout(accList));
+        // System.enqueueJob(new QueueableApexCallout(accList));
         Test.stopTest();     
         
     }

@@ -11,32 +11,30 @@ public class QueueableApexCallout implements Queueable, Database.AllowsCallouts{
         for(Account acc : this.accList){
             HttpRequest req = new HttpRequest();
             req.setEndpoint('callout:UPS_Access');
+            req.setHeader('Username', '{!$Credential.UserName}');
+            req.setHeader('Password', '{!$Credential.Password}');
             req.setHeader('AccessLicenseNumber', accessToken);
             req.setHeader('content-type', 'application/json');
             req.setMethod('POST');
             
-            JSONGenerator generator = JSON.createGenerator(true);   //instantiation of the generator
-            generator.writeStartObject(); 				// Writes the starting marker of a JSON object '{'
-                generator.writeFieldName('XAVRequest');
-                generator.writeStartObject();
-                    generator.writeFieldName('AddressKeyFormat');
-                    generator.writeStartObject();
-                        generator.writeFieldName('AddressLine');
-                        generator.writeStartArray();
-                            generator.writeString(acc.BillingStreet);
-                        generator.writeEndArray();
-                        generator.writeStringField('PostcodePrimaryLow', acc.BillingPostalCode);
-                        generator.writeStringField('PoliticalDivision2', acc.BillingCity);
-                        generator.writeStringField('PoliticalDivision1', acc.BillingState);
-                        generator.writeStringField('CountryCode', acc.BillingCountry);
-                    generator.writeEndObject();
-                generator.writeEndObject();
-            generator.writeEndObject();
-            String jsonString = generator.getAsString();
+            String jsonString = '{' 
+            + '\"XAVRequest\" : {'
+            + '\"AddressKeyFormat\" : {'
+            + '\"AddressLine\" : [ \"' + acc.BillingStreet + '\" ],'
+            + '\"PostcodePrimaryLow\" : \"' + acc.BillingPostalCode + '\",'
+            + '\"PoliticalDivision2\" : \"' + acc.BillingCity + '\",'
+            + '\"PoliticalDivision1\" : \"' + acc.BillingState + '\",'
+            + '\"CountryCode\" : \"' + acc.BillingCountry + '\"'
+            + '}}}';
+
+            System.debug(jsonString);
             
-            req.setBody(JSON.serialize(jsonString));
+            req.setBody(jsonString);
             Http http = new Http();
             HTTPResponse res = http.send(req);
+
+            System.debug(res.getHeaderKeys());
+            System.debug(res.getBody());
 
             if(res.getStatusCode()==200){
                 Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody()); 
