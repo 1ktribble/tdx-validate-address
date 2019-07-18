@@ -7,25 +7,34 @@ public class QueueableApexCallout implements Queueable, Database.AllowsCallouts{
     
     public void execute(QueueableContext qc){
         List<Account> accsToUpdate = new List<Account>();
-        for(Account acc : accList){
+        String accessToken = [SELECT MasterLabel, Token__c FROM AccessToken__mdt WHERE MasterLabel = 'UPS' LIMIT 1].Token__c;
+        for(Account acc : this.accList){
             HttpRequest req = new HttpRequest();
-            // Todo: Change to UPS Address Validator. Add the username and password to the request.
-
+            req.setEndpoint('callout:UPS_Access');
+            req.setHeader('Username', '{!$Credential.UserName}');
+            req.setHeader('Password', '{!$Credential.Password}');
+            req.setHeader('AccessLicenseNumber', accessToken);
             req.setHeader('content-type', 'application/json');
             req.setMethod('POST');
             
-            JSONGenerator generator = JSON.createGenerator(true);   //instantiation of the generator
-            generator.writeStartObject(); 				// Writes the starting marker of a JSON object '{'
-            generator.writeStringField('street', acc.BillingStreet);  	//Writes the # of contacts 
-            generator.writeStringField('city', acc.BillingCity);  	//Writes the # of contacts 
-            generator.writeStringField('state', acc.BillingState);  	//Writes the # of contacts 
-            generator.writeStringField('postal_code', acc.BillingPostalCode);  	//Writes the # of contacts 
-            generator.writeEndObject(); 				//Writes the ending marker of a JSON object '}'
-            String jsonString = generator.getAsString();
+            String jsonString = '{' 
+            + '\"XAVRequest\" : {'
+            + '\"AddressKeyFormat\" : {'
+            + '\"AddressLine\" : [ \"' + acc.BillingStreet + '\" ],'
+            + '\"PostcodePrimaryLow\" : \"' + acc.BillingPostalCode + '\",'
+            + '\"PoliticalDivision2\" : \"' + acc.BillingCity + '\",'
+            + '\"PoliticalDivision1\" : \"' + acc.BillingState + '\",'
+            + '\"CountryCode\" : \"' + acc.BillingCountry + '\"'
+            + '}}}';
+
+            System.debug(jsonString);
             
-            req.setBody(JSON.serialize(jsonString));
+            req.setBody(jsonString);
             Http http = new Http();
             HTTPResponse res = http.send(req);
+
+            System.debug(res.getHeaderKeys());
+            System.debug(res.getBody());
 
             if(res.getStatusCode()==200){
                 Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody()); 
@@ -35,3 +44,27 @@ public class QueueableApexCallout implements Queueable, Database.AllowsCallouts{
         }
     }
 }
+
+/* POST https://wwwcie.ups.com/addressvalidation/v1/1 HTTP/1.1
+content-type: application/json
+Username: upsSFDevEdition
+Password: <password>
+AccessLicenseNumber: <access-code>
+
+{
+    "XAVRequest": 
+    {
+        "AddressKeyFormat": 
+        {
+            "AddressLine":[
+                "8430 Sunset Blvd",
+                "",
+                ""
+            ],
+            "PostcodePrimaryLow": "90069",
+            "PoliticalDivision2": "Los Angeles",
+            "PoliticalDivision1": "CA",
+            "CountryCode": "US"
+        }
+    }
+} */

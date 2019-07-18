@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Token__c</fullName>
+    <description>Custom Security Token for headers only if necessary.</description>
+    <externalId>false</externalId>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <inlineHelpText>Custom Token to be used in header for callouts.</inlineHelpText>
+    <label>Token</label>
+    <required>true</required>
+    <type>TextArea</type>
+</CustomField>
