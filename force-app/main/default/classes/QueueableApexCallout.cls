@@ -1,6 +1,20 @@
 public class QueueableApexCallout implements Queueable, Database.AllowsCallouts{
     public List<Account> accList;
 
+    public class AddressKeyFormatter {
+        String[] AddressLine;
+        String PostcodePrimaryLow, PoliticalDivision1, PoliticalDivision2, CountryCode;
+
+        public AddressKeyFormatter(String countryCode) {
+
+        }
+
+        public AddressKeyFormatter(String countryCode, String[] addressLineArr, String postalCodePrimaryLow,
+            String politicalDivision1, String politicalDivision2) {
+
+        }
+    }
+
     public QueueableApexCallout(List<Account> accList){
         this.accList = accList;
     }
@@ -17,6 +31,16 @@ public class QueueableApexCallout implements Queueable, Database.AllowsCallouts{
             req.setHeader('content-type', 'application/json');
             req.setMethod('POST');
             
+            JSONGenerator generator = JSON.createGenerator(true);   //instantiation of the generator
+            generator.writeStartObject(); 				// Writes the starting marker of a JSON object '{'
+            generator.writeFieldName('XAVRequest');
+            generator.writeStringField('street', acc.BillingStreet);  	//Writes the # of contacts 
+            generator.writeStringField('city', acc.BillingCity);  	//Writes the # of contacts 
+            generator.writeStringField('state', acc.BillingState);  	//Writes the # of contacts 
+            generator.writeStringField('postal_code', acc.BillingPostalCode);  	//Writes the # of contacts 
+            generator.writeEndObject(); 				//Writes the ending marker of a JSON object '}'
+            String jsonString = generator.getAsString();
+
             String jsonString = '{' 
             + '\"XAVRequest\" : {'
             + '\"AddressKeyFormat\" : {'
