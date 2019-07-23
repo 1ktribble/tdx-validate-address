@@ -30,7 +30,7 @@ public class QueueableApexCallout implements Queueable, Database.AllowsCallouts{
             req.setHeader('AccessLicenseNumber', accessToken);
             req.setHeader('content-type', 'application/json');
             req.setMethod('POST');
-            
+
             JSONGenerator generator = JSON.createGenerator(true);
             generator.writeStartObject();
                 generator.writeFieldName('XAVRequest');
@@ -54,27 +54,118 @@ public class QueueableApexCallout implements Queueable, Database.AllowsCallouts{
             Http http = new Http();
             HTTPResponse res = http.send(req);
 
+            List<Database.SaveResult> results = new List<Database.SaveResult>();
+
             if(res.getStatusCode() == 200){
                 Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody()); 
 
                 UPSResponseFormatter upsResponse = new UPSResponseFormatter(
                     (Map<String, Object>) responseMap.get('XAVResponse')
+                    , true
                 );
                 
-                Integer code = Integer.valueOf(upsResponse.getUPSResponseCode());
+                String addressIndicatorType = upsResponse.getAddressIndicator();
                 
-                if(code == 1) {
-                    List<Address_Validation_Status__e> addressStatus = new List<Address_Validation_Status__e>();
+                switch on addressIndicatorType {
+                    when 'Valid' {
+                        List<Address_Validation_Status__e> addressStatus = new List<Address_Validation_Status__e>();
 
-                    addressStatus.add(
-                        new Address_Validation_Status__e(
-                            
-                        )
-                    );
+                        addressStatus.add(
+                            new Address_Validation_Status__e(
+                                Object_Id__c = acc.Id
+                                , Valid__c = true
+                            )
+                        );
+
+                        results = Eventbus.publish(addressStatus);
+                    }
+                    when 'Invalid' {
+                        List<Address_Validation_Status__e> addressStatus = new List<Address_Validation_Status__e>();
+
+                        addressStatus.add(
+                            new Address_Validation_Status__e(
+                                Object_Id__c = acc.Id
+                                , Valid__c = false
+                            )
+                        );
+
+                        results = Eventbus.publish(addressStatus);
+                    }
+                    when 'Ambiguous' {
+                        List<Address_Validation_Status__e> addressStatus = new List<Address_Validation_Status__e>();
+
+                        addressStatus.add(
+                            new Address_Validation_Status__e(
+                                Object_Id__c = acc.Id
+                                , Valid__c = false
+                                , Ambiguous_Address_Options__c = 'placeholder'
+                            )
+                        );
+
+                        results = Eventbus.publish(addressStatus);
+                    }
+                    when else {
+                        List<Address_Validation_Status__e> addressStatus = new List<Address_Validation_Status__e>();
+
+                        addressStatus.add(
+                            new Address_Validation_Status__e(
+                                Object_Id__c = acc.Id
+                                , Valid__c = false
+                                , Error_Message__c = 'error placeholder'
+                            )
+                        );
+
+                        results = Eventbus.publish(addressStatus);
+                    }
                 }
             } else if(res.getStatusCode() == 400) {
+                Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
 
+                UPSResponseFormatter upsResponse = new UPSResponseFormatter(
+                    (Map<String, Object>) responseMap.get('response')
+                    , false
+                );
+
+                Integer code = Integer.valueOf(upsResponse.getUPSResponseCode());
+
+                List<Address_Validation_Status__e> addressStatus = new List<Address_Validation_Status__e>();
+
+                addressStatus.add(
+                    new Address_Validation_Status__e(
+                        Object_Id__c = acc.Id
+                        , Valid__c = false
+                        , Error_Message__c = 'Unable to format response'
+                    )
+                );
+
+                results = Eventbus.publish(addressStatus);
+            } else {
+                List<Address_Validation_Status__e> addressStatus = new List<Address_Validation_Status__e>();
+
+                addressStatus.add(
+                    new Address_Validation_Status__e(
+                        Object_Id__c = acc.Id
+                        , Valid__c = false
+                        , Error_Message__c = 'The response code was ' + res.getStatusCode() + '.'
+                    )
+                );
+
+                results = Eventbus.publish(addressStatus);
             }
+
+            // Inspect publishing result for each event
+            for (Database.SaveResult sr : results) {
+                if (sr.isSuccess()) {
+                    System.debug('Successfully published event.');
+                } else {
+                    for(Database.Error err : sr.getErrors()) {
+                        System.debug('Error returned: ' +
+                                    err.getStatusCode() +
+                                    ' - ' +
+                                    err.getMessage());
+                    }
+                }
+            }       
         }
     }
 }
