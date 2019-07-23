@@ -5,4 +5,5 @@
     <eventType>HighVolume</eventType>
     <label>Address Validation Status</label>
     <pluralLabel>Address Validation Statuses</pluralLabel>
+    <publishBehavior>PublishImmediately</publishBehavior>
 </CustomObject>

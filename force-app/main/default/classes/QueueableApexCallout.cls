@@ -31,39 +31,49 @@ public class QueueableApexCallout implements Queueable, Database.AllowsCallouts{
             req.setHeader('content-type', 'application/json');
             req.setMethod('POST');
             
-            JSONGenerator generator = JSON.createGenerator(true);   //instantiation of the generator
-            generator.writeStartObject(); 				// Writes the starting marker of a JSON object '{'
-            generator.writeFieldName('XAVRequest');
-            generator.writeStringField('street', acc.BillingStreet);  	//Writes the # of contacts 
-            generator.writeStringField('city', acc.BillingCity);  	//Writes the # of contacts 
-            generator.writeStringField('state', acc.BillingState);  	//Writes the # of contacts 
-            generator.writeStringField('postal_code', acc.BillingPostalCode);  	//Writes the # of contacts 
+            JSONGenerator generator = JSON.createGenerator(true);
+            generator.writeStartObject();
+                generator.writeFieldName('XAVRequest');
+                generator.writeStartObject();
+                    generator.writeFieldName('AddressKeyFormat');
+                        generator.writeStartObject();
+                        generator.writeFieldName('AddressLine');
+                        generator.writeStartArray();
+                            generator.writeString(acc.BillingStreet);
+                        generator.writeEndArray();
+                        generator.writeStringField('PoliticalDivision2', acc.BillingCity);
+                        generator.writeStringField('PoliticalDivision1', acc.BillingState);
+                        generator.writeStringField('PostcodePrimaryLow', acc.BillingPostalCode); 
+                        generator.writeStringField('CountryCode', acc.BillingCountry);
+                    generator.writeEndObject();
+                generator.writeEndObject();
             generator.writeEndObject(); 				//Writes the ending marker of a JSON object '}'
             String jsonString = generator.getAsString();
-
-            String jsonString = '{' 
-            + '\"XAVRequest\" : {'
-            + '\"AddressKeyFormat\" : {'
-            + '\"AddressLine\" : [ \"' + acc.BillingStreet + '\" ],'
-            + '\"PostcodePrimaryLow\" : \"' + acc.BillingPostalCode + '\",'
-            + '\"PoliticalDivision2\" : \"' + acc.BillingCity + '\",'
-            + '\"PoliticalDivision1\" : \"' + acc.BillingState + '\",'
-            + '\"CountryCode\" : \"' + acc.BillingCountry + '\"'
-            + '}}}';
-
-            System.debug(jsonString);
             
             req.setBody(jsonString);
             Http http = new Http();
             HTTPResponse res = http.send(req);
 
-            System.debug(res.getHeaderKeys());
-            System.debug(res.getBody());
-
-            if(res.getStatusCode()==200){
+            if(res.getStatusCode() == 200){
                 Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody()); 
 
-                // TODO: Create an event with the response from the responseMap identifier.
+                UPSResponseFormatter upsResponse = new UPSResponseFormatter(
+                    (Map<String, Object>) responseMap.get('XAVResponse')
+                );
+                
+                Integer code = Integer.valueOf(upsResponse.getUPSResponseCode());
+                
+                if(code == 1) {
+                    List<Address_Validation_Status__e> addressStatus = new List<Address_Validation_Status__e>();
+
+                    addressStatus.add(
+                        new Address_Validation_Status__e(
+                            
+                        )
+                    );
+                }
+            } else if(res.getStatusCode() == 400) {
+
             }
         }
     }
